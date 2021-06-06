@@ -32,7 +32,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     address borrowerOperationsAddress;
     address troveManagerAddress;
 
-    uint constant public ETHUSD_TELLOR_REQ_ID = 1;
+    uint constant public AMPLUSD_TELLOR_REQ_ID = 10;
 
     // Use to convert a price answer to an 18-digit precision uint
     uint constant public TARGET_DIGITS = 18;  
@@ -48,7 +48,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     * The maximum relative price difference between two oracle responses allowed in order for the PriceFeed
     * to return to using the Chainlink oracle. 18-digit precision.
     */
-    uint constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 5e16; // 5%
+    uint constant public MAX_PRICE_DIFFERENCE_BETWEEN_ORACLES = 10e16; // 10%
 
     // The last good price seen from an oracle by Liquity
     uint public lastGoodPrice;
@@ -488,7 +488,7 @@ contract PriceFeed is Ownable, CheckContract, BaseMath, IPriceFeed {
     // --- Oracle response wrapper functions ---
 
     function _getCurrentTellorResponse() internal view returns (TellorResponse memory tellorResponse) {
-        try tellorCaller.getTellorCurrentValue(ETHUSD_TELLOR_REQ_ID) returns
+        try tellorCaller.getTellorCurrentValue(AMPLUSD_TELLOR_REQ_ID) returns
         (
             bool ifRetrieve,
             uint256 value,

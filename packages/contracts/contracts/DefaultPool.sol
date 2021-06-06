@@ -3,6 +3,7 @@
 pragma solidity 0.6.11;
 
 import './Interfaces/IDefaultPool.sol';
+import "./Dependencies/IAMPL.sol";
 import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
@@ -22,7 +23,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     address public troveManagerAddress;
     address public activePoolAddress;
-    uint256 internal ETH;  // deposited ETH tracker
+    IAMPL public amplToken;
     uint256 internal LUSDDebt;  // debt
 
     event TroveManagerAddressChanged(address _newTroveManagerAddress);
@@ -33,13 +34,15 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     function setAddresses(
         address _troveManagerAddress,
-        address _activePoolAddress
+        address _activePoolAddress,
+        address _amplTokenAddress
     )
         external
         onlyOwner
     {
         checkContract(_troveManagerAddress);
         checkContract(_activePoolAddress);
+        checkContract(_amplTokenAddress);
 
         troveManagerAddress = _troveManagerAddress;
         activePoolAddress = _activePoolAddress;
@@ -58,7 +61,7 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     * Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
     function getETH() external view override returns (uint) {
-        return ETH;
+        return amplToken.balanceOf(address(this));
     }
 
     function getLUSDDebt() external view override returns (uint) {
@@ -70,11 +73,11 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
     function sendETHToActivePool(uint _amount) external override {
         _requireCallerIsTroveManager();
         address activePool = activePoolAddress; // cache to save an SLOAD
-        ETH = ETH.sub(_amount);
-        emit DefaultPoolETHBalanceUpdated(ETH);
+        uint AMPL = this.getETH().sub(_amount);
+        emit DefaultPoolETHBalanceUpdated(AMPL);
         emit EtherSent(activePool, _amount);
 
-        (bool success, ) = activePool.call{ value: _amount }("");
+        bool success = amplToken.transferFrom(address(this), activePool, _amount);
         require(success, "DefaultPool: sending ETH failed");
     }
 
@@ -98,13 +101,5 @@ contract DefaultPool is Ownable, CheckContract, IDefaultPool {
 
     function _requireCallerIsTroveManager() internal view {
         require(msg.sender == troveManagerAddress, "DefaultPool: Caller is not the TroveManager");
-    }
-
-    // --- Fallback function ---
-
-    receive() external payable {
-        _requireCallerIsActivePool();
-        ETH = ETH.add(msg.value);
-        emit DefaultPoolETHBalanceUpdated(ETH);
     }
 }

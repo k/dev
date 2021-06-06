@@ -7,6 +7,7 @@ import "./Dependencies/SafeMath.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
+import "./Dependencies/IAMPL.sol";
 
 /*
  * The Active Pool holds the ETH collateral and LUSD debt (but not LUSD tokens) for all active troves.
@@ -24,7 +25,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     address public troveManagerAddress;
     address public stabilityPoolAddress;
     address public defaultPoolAddress;
-    uint256 internal ETH;  // deposited ether tracker
+    IAMPL public amplToken;
     uint256 internal LUSDDebt;
 
     // --- Events ---
@@ -40,7 +41,8 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         address _borrowerOperationsAddress,
         address _troveManagerAddress,
         address _stabilityPoolAddress,
-        address _defaultPoolAddress
+        address _defaultPoolAddress,
+        address _amplTokenAddress
     )
         external
         onlyOwner
@@ -49,11 +51,13 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
         checkContract(_troveManagerAddress);
         checkContract(_stabilityPoolAddress);
         checkContract(_defaultPoolAddress);
+        checkContract(_amplTokenAddress);
 
         borrowerOperationsAddress = _borrowerOperationsAddress;
         troveManagerAddress = _troveManagerAddress;
         stabilityPoolAddress = _stabilityPoolAddress;
         defaultPoolAddress = _defaultPoolAddress;
+        amplToken = IAMPL(_amplTokenAddress);
 
         emit BorrowerOperationsAddressChanged(_borrowerOperationsAddress);
         emit TroveManagerAddressChanged(_troveManagerAddress);
@@ -71,7 +75,7 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
     *Not necessarily equal to the the contract's raw ETH balance - ether can be forcibly sent to contracts.
     */
     function getETH() external view override returns (uint) {
-        return ETH;
+        return amplToken.balanceOf(address(this));
     }
 
     function getLUSDDebt() external view override returns (uint) {
@@ -82,11 +86,12 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
 
     function sendETH(address _account, uint _amount) external override {
         _requireCallerIsBOorTroveMorSP();
-        ETH = ETH.sub(_amount);
-        emit ActivePoolETHBalanceUpdated(ETH);
+        uint AMPL = amplToken.balanceOf(address(this));
+        AMPL = AMPL.sub(_amount);
+        emit ActivePoolETHBalanceUpdated(AMPL);
         emit EtherSent(_account, _amount);
 
-        (bool success, ) = _account.call{ value: _amount }("");
+        bool success = amplToken.transferFrom(address(this), _account, _amount);
         require(success, "ActivePool: sending ETH failed");
     }
 
@@ -126,11 +131,4 @@ contract ActivePool is Ownable, CheckContract, IActivePool {
             "ActivePool: Caller is neither BorrowerOperations nor TroveManager");
     }
 
-    // --- Fallback function ---
-
-    receive() external payable {
-        _requireCallerIsBorrowerOperationsOrDefaultPool();
-        ETH = ETH.add(msg.value);
-        emit ActivePoolETHBalanceUpdated(ETH);
-    }
 }

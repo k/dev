@@ -10,6 +10,7 @@ import "./Interfaces/ISortedTroves.sol";
 import "./Interfaces/ILQTYToken.sol";
 import "./Interfaces/ILQTYStaking.sol";
 import "./Dependencies/LiquityBase.sol";
+import "./Dependencies/IAMPL.sol";
 import "./Dependencies/Ownable.sol";
 import "./Dependencies/CheckContract.sol";
 import "./Dependencies/console.sol";
@@ -26,6 +27,8 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
     address gasPoolAddress;
 
     ICollSurplusPool collSurplusPool;
+
+    IAMPL public override amplToken;
 
     ILUSDToken public override lusdToken;
 
@@ -171,6 +174,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         IActivePool activePool;
         IDefaultPool defaultPool;
         ILUSDToken lusdToken;
+        IAMPL amplToken;
         ILQTYStaking lqtyStaking;
         ISortedTroves sortedTroves;
         ICollSurplusPool collSurplusPool;
@@ -240,6 +244,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         address _collSurplusPoolAddress,
         address _priceFeedAddress,
         address _lusdTokenAddress,
+        address _amplTokenAddress,
         address _sortedTrovesAddress,
         address _lqtyTokenAddress,
         address _lqtyStakingAddress
@@ -268,6 +273,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
         collSurplusPool = ICollSurplusPool(_collSurplusPoolAddress);
         priceFeed = IPriceFeed(_priceFeedAddress);
         lusdToken = ILUSDToken(_lusdTokenAddress);
+        amplToken = IAMPL(_amplTokenAddress);
         sortedTroves = ISortedTroves(_sortedTrovesAddress);
         lqtyToken = ILQTYToken(_lqtyTokenAddress);
         lqtyStaking = ILQTYStaking(_lqtyStakingAddress);
@@ -497,6 +503,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             activePool,
             defaultPool,
             ILUSDToken(address(0)),
+            IAMPL(address(0)),
             ILQTYStaking(address(0)),
             sortedTroves,
             ICollSurplusPool(address(0)),
@@ -932,6 +939,7 @@ contract TroveManager is LiquityBase, Ownable, CheckContract, ITroveManager {
             activePool,
             defaultPool,
             lusdToken,
+            amplToken,
             lqtyStaking,
             sortedTroves,
             collSurplusPool,

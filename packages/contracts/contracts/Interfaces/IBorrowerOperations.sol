@@ -34,14 +34,15 @@ interface IBorrowerOperations {
         address _priceFeedAddress,
         address _sortedTrovesAddress,
         address _lusdTokenAddress,
+        address _amplTokenAddress,
         address _lqtyStakingAddress
     ) external;
 
-    function openTrove(uint _maxFee, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable;
+    function openTrove(uint _maxFee, uint _AMPLAmount, uint _LUSDAmount, address _upperHint, address _lowerHint) external payable;
 
-    function addColl(address _upperHint, address _lowerHint) external payable;
+    function addColl(uint _amount, address _upperHint, address _lowerHint) external payable;
 
-    function moveETHGainToTrove(address _user, address _upperHint, address _lowerHint) external payable;
+    function moveETHGainToTrove(address _user, uint _AMPLAmount, address _upperHint, address _lowerHint) external payable;
 
     function withdrawColl(uint _amount, address _upperHint, address _lowerHint) external;
 
@@ -51,7 +52,7 @@ interface IBorrowerOperations {
 
     function closeTrove() external;
 
-    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
+    function adjustTrove(uint _maxFee, uint _collWithdrawal, uint _collDeposit, uint _debtChange, bool isDebtIncrease, address _upperHint, address _lowerHint) external payable;
 
     function claimCollateral() external;
 
